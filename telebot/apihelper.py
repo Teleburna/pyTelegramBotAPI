@@ -7,8 +7,8 @@ from telebot import util
 
 logger = telebot.logger
 
-API_URL = "https://api.telegram.org/bot{0}/{1}"
-FILE_URL = "https://api.telegram.org/file/bot{0}/{1}"
+API_URL = "https://api.pwrtelegram.xyz/bot{0}/{1}"
+FILE_URL = "https://storage.pwrtelegram.xyz/{0}"
 
 CONNECT_TIMEOUT = 3.5
 READ_TIMEOUT = 9999
@@ -32,6 +32,8 @@ def _make_request(token, method_name, method='get', params=None, files=None, bas
         if 'timeout' in params: read_timeout = params['timeout'] + 10
         if 'connect-timeout' in params: connect_timeout = params['connect-timeout'] + 10
     result = requests.request(method, request_url, params=params, files=files, timeout=(connect_timeout, read_timeout))
+    while result.status_code == 202:
+        result = requests.request(method, request_url, params=params, files=files, timeout=(connect_timeout, read_timeout))
     logger.debug("The server returned: '{0}'".format(result.text.encode('utf8')))
     return _check_result(method_name, result)['result']
 
@@ -79,7 +81,7 @@ def get_file(token, file_id):
 
 
 def download_file(token, file_path):
-    url = FILE_URL.format(token, file_path)
+    url = FILE_URL.format(file_path)
     result = requests.get(url)
     if result.status_code != 200:
         msg = 'The server returned HTTP {0} {1}. Response body:\n[{2}]' \
