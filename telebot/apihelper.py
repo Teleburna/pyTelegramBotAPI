@@ -32,9 +32,12 @@ def _make_request(token, method_name, method='get', params=None, files=None, bas
         if 'timeout' in params: read_timeout = params['timeout'] + 10
         if 'connect-timeout' in params: connect_timeout = params['connect-timeout'] + 10
     result = requests.request(method, request_url, params=params, files=files, timeout=(connect_timeout, read_timeout))
-    while result.status_code == 202:
-        result = requests.request(method, request_url, params=params, files=files, timeout=(connect_timeout, read_timeout))
     logger.debug("The server returned: '{0}'".format(result.text.encode('utf8')))
+    try:
+        while result.json()["error_code"] == 202:
+            result = requests.request(method, request_url, params=params, files=files, timeout=(connect_timeout, read_timeout))
+    except KeyError:
+        logger.debug("Server returned 202, retrying to download file...")
     return _check_result(method_name, result)['result']
 
 
